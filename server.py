@@ -20,10 +20,12 @@ def handle_client(conn, addr):
 
     try:
         while True:
-           data = conn.recv(1024).decode().strip()
-            if not data:
-                break
-             start_req = time.time()
+          data = conn.recv(1024).decode().strip()
+
+          if not data:
+          break
+
+          start_req = time.time()
 
             print(f"[RAW DATA] {data}")
 
