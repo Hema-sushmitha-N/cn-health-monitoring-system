@@ -1,16 +1,27 @@
 import socket
 import ssl
 import threading
+import time   # ✅ ADDED
 
 HOST = '127.0.0.1'
 PORT = 65432
 CPU_THRESHOLD = 20.0
 RAM_THRESHOLD = 70.0
 
+# ✅ GLOBAL METRICS (ADDED)
+total_requests = 0
+total_latency = 0
+start_time = time.time()
+lock = threading.Lock()
+
 def handle_client(conn, addr):
     print(f"[+] Secure connection established from {addr}")
+    global total_requests, total_latency   # ✅ ADDED
+
     try:
         while True:
+            start_req = time.time()   # ✅ START LATENCY TIMER
+
             data = conn.recv(1024).decode().strip()
             if not data:
                 break
@@ -35,6 +46,31 @@ def handle_client(conn, addr):
 
             if ram_val > RAM_THRESHOLD:
                 print(f"⚠️ ALERT: High RAM usage on {addr}: {ram_val}%")
+
+            # ✅ END LATENCY TIMER
+            end_req = time.time()
+            latency = (end_req - start_req) * 1000  # ms
+
+            # ✅ UPDATE METRICS (THREAD SAFE)
+            with lock:
+                total_requests += 1
+                total_latency += latency
+
+                elapsed = time.time() - start_time
+
+                if elapsed >= 5:  # print every 5 sec
+                    throughput = total_requests / elapsed
+                    avg_latency = total_latency / total_requests
+
+                    print("\n--- Performance Stats ---")
+                    print(f"Total Requests: {total_requests}")
+                    print(f"Throughput: {throughput:.2f} req/sec")
+                    print(f"Avg Latency: {avg_latency:.2f} ms\n")
+
+                    # reset counters
+                    total_requests = 0
+                    total_latency = 0
+                    globals()['start_time'] = time.time()
 
     except Exception as e:
         print(f"[-] Connection with {addr} closed: {e}")
