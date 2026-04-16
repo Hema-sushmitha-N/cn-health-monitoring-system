@@ -20,11 +20,10 @@ def handle_client(conn, addr):
 
     try:
         while True:
-            start_req = time.time()   # ✅ START LATENCY TIMER
-
-            data = conn.recv(1024).decode().strip()
+           data = conn.recv(1024).decode().strip()
             if not data:
                 break
+             start_req = time.time()
 
             print(f"[RAW DATA] {data}")
 
@@ -50,6 +49,7 @@ def handle_client(conn, addr):
             # ✅ END LATENCY TIMER
             end_req = time.time()
             latency = (end_req - start_req) * 1000  # ms
+            print(f"Latency: {latency:.2f} ms")
 
             # ✅ UPDATE METRICS (THREAD SAFE)
             with lock:
